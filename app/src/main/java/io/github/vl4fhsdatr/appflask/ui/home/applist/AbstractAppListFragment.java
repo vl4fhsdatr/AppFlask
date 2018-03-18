@@ -258,7 +258,7 @@ public abstract class AbstractAppListFragment extends Fragment
 
     @SuppressWarnings("unused")
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onRefreshEvent(RefreshEvent ev) {
+    public void onEventRefresh(RefreshEvent ev) {
         triggerLoadPackageInfoListInternal();
     }
 

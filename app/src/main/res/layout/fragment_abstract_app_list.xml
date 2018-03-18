@@ -1,0 +1,63 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="io.github.vl4fhsdatr.appflask.ui.home.flask.AppFlaskFragment">
+
+    <com.wang.avi.AVLoadingIndicatorView
+        android:id="@+id/li_app"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        app:indicatorName="BallPulseIndicator"
+        app:indicatorColor="@color/colorAccent" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view_app"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:scrollbars="vertical" />
+
+    <com.github.clans.fab.FloatingActionMenu
+        android:id="@+id/fab_menu"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="16dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:fab_colorNormal="@color/colorFabNormal"
+        app:fab_colorDisabled="@color/colorFabDisabled"
+        app:fab_colorPressed="@color/colorFabPressed"
+        app:fab_colorRipple="@color/colorFabRipple"
+        android:visibility="gone">
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_menu_edit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_menu_edit"
+            app:fab_colorNormal="@color/colorFabNormal"
+            app:fab_colorDisabled="@color/colorFabDisabled"
+            app:fab_colorPressed="@color/colorFabPressed"
+            app:fab_colorRipple="@color/colorFabRipple"
+            app:fab_label="edit"
+            />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_menu_refresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_menu_refresh"
+            app:fab_colorNormal="@color/colorFabNormal"
+            app:fab_colorDisabled="@color/colorFabDisabled"
+            app:fab_colorPressed="@color/colorFabPressed"
+            app:fab_colorRipple="@color/colorFabRipple"
+            app:fab_label="refresh"
+            />
+
+    </com.github.clans.fab.FloatingActionMenu>
+
+</RelativeLayout>

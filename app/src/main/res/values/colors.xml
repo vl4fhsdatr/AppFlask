@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#f41c2e</color>
+    <color name="colorPrimaryDark">#f41c2e</color>
+    <color name="colorAccent">#f77117</color>
+    
+    <color name="colorTextTabSelected">#FFF</color>
+    <color name="colorTextTabNormal">#DDD</color>
+
+    <color name="colorFabNormal">#F00</color>
+    <color name="colorFabDisabled">#F00</color>
+    <color name="colorFabPressed">#F00</color>
+    <color name="colorFabRipple">#F00</color>
+
+</resources>

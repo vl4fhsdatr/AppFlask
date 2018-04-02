@@ -1,6 +1,5 @@
 package io.github.vl4fhsdatr.appflask.ui;
 
-import android.arch.persistence.room.Room;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -17,7 +16,6 @@ import android.view.MenuItem;
 
 import java.lang.reflect.InvocationTargetException;
 
-import io.github.vl4fhsdatr.appflask.database.AppDatabase;
 import io.github.vl4fhsdatr.appflask.R;
 import io.github.vl4fhsdatr.appflask.ui.readme.ReadmeFragment;
 import io.github.vl4fhsdatr.appflask.ui.home.HomeFragment;
@@ -25,7 +23,7 @@ import io.github.vl4fhsdatr.appflask.ui.setting.SettingFragment;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-        TabLayoutSupport, ActionModeSupport, DatabaseSupport {
+        TabLayoutSupport, ActionModeSupport {
 
     @SuppressWarnings("unused")
     private static final String TAG = "MainActivity";
@@ -41,11 +39,6 @@ public class MainActivity extends AppCompatActivity
      * current drawer fragment index
      */
     private int mCurrentDrawerFragmentIndex;
-
-    /**
-     * global database reference
-     */
-    private AppDatabase mDatabase;
 
     /**
      * global ActionMode reference
@@ -76,10 +69,6 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        mDatabase = Room.databaseBuilder(this, AppDatabase.class, AppDatabase.DB_NAME)
-                .addMigrations(AppDatabase.FROM_1_TO_2)
-                .build();
-
         try {
             Fragment targetFragment = (Fragment)FRAGMENT_CLASSES[0]
                     .getMethod("newInstance")
@@ -103,7 +92,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mDatabase.close();
     }
 
     @Override
@@ -179,9 +167,5 @@ public class MainActivity extends AppCompatActivity
         return mActionMode;
     }
 
-    @Override
-    public AppDatabase getDatabase() {
-        return mDatabase;
-    }
 
 }

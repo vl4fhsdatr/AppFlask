@@ -1,7 +1,9 @@
 package io.github.vl4fhsdatr.appflask.ui.home.applist;
 
-import android.content.pm.PackageInfo;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.SparseBooleanArray;
@@ -14,8 +16,9 @@ import android.widget.TextView;
 import java.util.List;
 
 import io.github.vl4fhsdatr.appflask.R;
+import io.github.vl4fhsdatr.appflask.core.AppInfo;
 
-public class PackageInfoAdapter extends RecyclerView.Adapter<PackageInfoAdapter.ViewHolder> {
+public class AppInfoAdapter extends RecyclerView.Adapter<AppInfoAdapter.ViewHolder> {
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         private TextView mLabel;
@@ -33,17 +36,17 @@ public class PackageInfoAdapter extends RecyclerView.Adapter<PackageInfoAdapter.
 
     }
 
-    private List<PackageInfo> mPackageInfoList;
+    private List<AppInfo> mAppInfoList;
     private PackageManager mPackageManager;
     private SparseBooleanArray mCheckedItems = new SparseBooleanArray();
 
     /**
      *
-     * @param packageInfoList initial data
+     * @param appInfoList initial data
      * @param packageManager PackageManager
      */
-    PackageInfoAdapter(List<PackageInfo> packageInfoList, PackageManager packageManager) {
-        this.mPackageInfoList = packageInfoList;
+    AppInfoAdapter(List<AppInfo> appInfoList, PackageManager packageManager) {
+        this.mAppInfoList = appInfoList;
         this.mPackageManager = packageManager;
     }
 
@@ -56,16 +59,44 @@ public class PackageInfoAdapter extends RecyclerView.Adapter<PackageInfoAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        PackageInfo packageInfo = mPackageInfoList.get(position);
-        holder.mIcon.setImageDrawable(packageInfo.applicationInfo.loadIcon(mPackageManager));
-        holder.mLabel.setText(packageInfo.applicationInfo.loadLabel(mPackageManager));
+        AppInfo info = mAppInfoList.get(position);
+        try {
+            ApplicationInfo applicationInfo = mPackageManager.getApplicationInfo(info.getName(), 0);
+            holder.mIcon.setImageDrawable(applicationInfo.loadIcon(mPackageManager));
+            if (info.isInProcessing()) {
+                setLocked(holder.mIcon);
+            } else {
+                setUnlocked(holder.mIcon);
+            }
+            holder.mLabel.setText(applicationInfo.loadLabel(mPackageManager));
+            holder.mDisabled.setVisibility(applicationInfo.enabled ? View.GONE : View.VISIBLE);
+
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
         holder.mChecked.setVisibility(mCheckedItems.get(position, false) ? View.VISIBLE: View.GONE);
-        holder.mDisabled.setVisibility(packageInfo.applicationInfo.enabled ? View.GONE : View.VISIBLE);
+    }
+
+    // https://stackoverflow.com/questions/28308325/androidset-gray-scale-filter-to-imageview#28312202
+
+    public static void  setLocked(ImageView v)
+    {
+        ColorMatrix matrix = new ColorMatrix();
+        matrix.setSaturation(0);  //0 means grayscale
+        ColorMatrixColorFilter cf = new ColorMatrixColorFilter(matrix);
+        v.setColorFilter(cf);
+        v.setImageAlpha(128);   // 128 = 0.5
+    }
+
+    public static void  setUnlocked(ImageView v)
+    {
+        v.setColorFilter(null);
+        v.setImageAlpha(255);
     }
 
     @Override
     public int getItemCount() {
-        return mPackageInfoList.size();
+        return mAppInfoList.size();
     }
 
     /**
@@ -74,17 +105,17 @@ public class PackageInfoAdapter extends RecyclerView.Adapter<PackageInfoAdapter.
      * @return current position data
      */
     @SuppressWarnings("WeakerAccess")
-    public PackageInfo getItemData(int position) {
-        return mPackageInfoList.get(position);
+    public AppInfo getItemData(int position) {
+        return mAppInfoList.get(position);
     }
 
     /**
      * Reset data.
-     * @param packageInfoList new data
+     * @param appInfoList new data
      */
     @SuppressWarnings("WeakerAccess")
-    public void resetDataSet(List<PackageInfo> packageInfoList) {
-        this.mPackageInfoList = packageInfoList;
+    public void resetDataSet(List<AppInfo> appInfoList) {
+        this.mAppInfoList = appInfoList;
         notifyDataSetChanged();
     }
 
@@ -139,13 +170,13 @@ public class PackageInfoAdapter extends RecyclerView.Adapter<PackageInfoAdapter.
     @SuppressWarnings("WeakerAccess")
     public void setAllItemChecked(boolean isChecked) {
         if (isChecked) {
-            for (int i = 0; i < mPackageInfoList.size(); i++) {
+            for (int i = 0; i < mAppInfoList.size(); i++) {
                 mCheckedItems.put(i, true);
             }
         } else {
             mCheckedItems.clear();
         }
-        notifyItemRangeChanged(0, mPackageInfoList.size());
+        notifyItemRangeChanged(0, mAppInfoList.size());
     }
 
 }

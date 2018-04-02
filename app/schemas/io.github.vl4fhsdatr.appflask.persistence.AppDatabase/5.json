@@ -1,12 +1,12 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 2,
-    "identityHash": "10f4d738c7298d529d9f64112a8b3bcd",
+    "version": 5,
+    "identityHash": "6230fd6a571a7c2491f808476bb1aa44",
     "entities": [
       {
         "tableName": "app_info",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `app_name` TEXT, `enabled` INTEGER NOT NULL, `in_flask` INTEGER NOT NULL, `in_processing` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT, `enabled` INTEGER NOT NULL, `in_flask` INTEGER NOT NULL, `in_processing` INTEGER NOT NULL, `uid` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -15,8 +15,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "appName",
-            "columnName": "app_name",
+            "fieldPath": "name",
+            "columnName": "name",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -37,6 +37,12 @@
             "columnName": "in_processing",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "uid",
+            "columnName": "uid",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -47,12 +53,12 @@
         },
         "indices": [
           {
-            "name": "index_app_info_app_name",
+            "name": "index_app_info_name",
             "unique": true,
             "columnNames": [
-              "app_name"
+              "name"
             ],
-            "createSql": "CREATE UNIQUE INDEX `index_app_info_app_name` ON `${TABLE_NAME}` (`app_name`)"
+            "createSql": "CREATE UNIQUE INDEX `index_app_info_name` ON `${TABLE_NAME}` (`name`)"
           }
         ],
         "foreignKeys": []
@@ -60,7 +66,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"10f4d738c7298d529d9f64112a8b3bcd\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"6230fd6a571a7c2491f808476bb1aa44\")"
     ]
   }
 }

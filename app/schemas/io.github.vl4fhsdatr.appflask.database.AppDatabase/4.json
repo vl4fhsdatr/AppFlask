@@ -1,12 +1,12 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 2,
-    "identityHash": "10f4d738c7298d529d9f64112a8b3bcd",
+    "version": 4,
+    "identityHash": "d5bd79903f0c2647dc8f68e513eafb3d",
     "entities": [
       {
         "tableName": "app_info",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `app_name` TEXT, `enabled` INTEGER NOT NULL, `in_flask` INTEGER NOT NULL, `in_processing` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `app_name` TEXT, `enabled` INTEGER NOT NULL, `in_flask` INTEGER NOT NULL, `in_processing` INTEGER NOT NULL, `uid` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -37,6 +37,12 @@
             "columnName": "in_processing",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "uid",
+            "columnName": "uid",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -60,7 +66,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"10f4d738c7298d529d9f64112a8b3bcd\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"d5bd79903f0c2647dc8f68e513eafb3d\")"
     ]
   }
 }

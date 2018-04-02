@@ -1,8 +1,8 @@
 package io.github.vl4fhsdatr.appflask.ui.home.applist;
 
 import android.app.Activity;
+import android.arch.lifecycle.Observer;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -10,6 +10,7 @@ import android.provider.Settings;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewCompat;
@@ -30,17 +31,13 @@ import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.wang.avi.AVLoadingIndicatorView;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import eu.chainfire.libsuperuser.Shell;
 import io.github.vl4fhsdatr.appflask.R;
+import io.github.vl4fhsdatr.appflask.persistence.AppDatabase;
+import io.github.vl4fhsdatr.appflask.core.AppInfo;
 import io.github.vl4fhsdatr.appflask.ui.ActionModeSupport;
-import io.reactivex.Observable;
+import io.github.vl4fhsdatr.appflask.util.RxUtils;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
@@ -59,10 +56,11 @@ public abstract class AbstractAppListFragment extends Fragment
     private RecyclerView mRecyclerView;
     private FloatingActionMenu mFabMenu;
 
-    private PackageInfoAdapter mRecyclerViewAdapter;
-    private int mNumberOfWipOperations;
+    private AppInfoAdapter mRecyclerViewAdapter;
 
     protected final CompositeDisposable mDisposables = new CompositeDisposable();
+
+    private boolean mDataLoaded;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -76,8 +74,6 @@ public abstract class AbstractAppListFragment extends Fragment
         setupRecyclerView();
         setupFabMenu();
 
-        triggerLoadPackageInfoListInternal();
-
         return view;
 
     }
@@ -85,13 +81,10 @@ public abstract class AbstractAppListFragment extends Fragment
     @Override
     public void onStart() {
         super.onStart();
-        if (mNumberOfWipOperations > 0) {
-            if (!mIndicatorView.isShown()) {
-                mIndicatorView.setVisibility(View.VISIBLE);
-                mIndicatorView.show();
-            }
+        if (!mDataLoaded && !mIndicatorView.isShown()) {
+            mIndicatorView.setVisibility(View.VISIBLE);
+            mIndicatorView.show();
         }
-        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -100,7 +93,6 @@ public abstract class AbstractAppListFragment extends Fragment
         if (mIndicatorView.isShown()) {
             mIndicatorView.hide();
         }
-        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -143,7 +135,6 @@ public abstract class AbstractAppListFragment extends Fragment
         return result;
     }
 
-
     @Override
     public void onDestroyActionMode(ActionMode actionMode) {
         mRecyclerViewAdapter.setAllItemChecked(false);
@@ -169,13 +160,13 @@ public abstract class AbstractAppListFragment extends Fragment
                 }
             }
                 break;
-            case R.id.fab_menu_refresh:
-                triggerLoadPackageInfoList();
-                break;
+
             default:
                 onFabOptionsItemSelected(view.getId());
         }
     }
+
+    protected abstract void onCreateContextualOptionsMenu(Menu menu);
 
     protected abstract boolean onContextualOptionsItemSelected(MenuItem item);
 
@@ -183,9 +174,7 @@ public abstract class AbstractAppListFragment extends Fragment
 
     protected abstract void onFabOptionsItemSelected(int id);
 
-    protected abstract void onCreateContextualOptionsMenu(Menu menu);
-
-    protected abstract Observable<List<PackageInfo>> onCreatePackageInfoListObservable();
+    protected abstract AppDatabase getDatabase();
 
     protected List<String> getCheckedApplications() {
         List<String> result = new ArrayList<>();
@@ -193,7 +182,7 @@ public abstract class AbstractAppListFragment extends Fragment
         int itemCount = mRecyclerViewAdapter.getItemCount();
         for ( int i = 0; i < itemCount; i++) {
             if (array.get(i, false)) {
-                result.add(mRecyclerViewAdapter.getItemData(i).packageName);
+                result.add(mRecyclerViewAdapter.getItemData(i).getName());
             }
         }
         return result;
@@ -203,7 +192,7 @@ public abstract class AbstractAppListFragment extends Fragment
         List<String> result = new ArrayList<>();
         int itemCount = mRecyclerViewAdapter.getItemCount();
         for ( int i = 0; i < itemCount; i++) {
-            result.add(mRecyclerViewAdapter.getItemData(i).packageName);
+            result.add(mRecyclerViewAdapter.getItemData(i).getName());
         }
         return result;
     }
@@ -230,73 +219,9 @@ public abstract class AbstractAppListFragment extends Fragment
         return PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean(getString(R.string.pref_show_system_app), false);
     }
 
-    protected void beginAsyncTask(String tag) {
-        Log.d(TAG, String.format("(%d)%s::beginAsyncTask => %s", mNumberOfWipOperations, getClass().getName(),tag));
-        mNumberOfWipOperations += 1;
-        if (mNumberOfWipOperations == 1) {
-            if (!mIndicatorView.isShown()) {
-                // !important
-                mIndicatorView.setVisibility(View.VISIBLE);
-                mIndicatorView.show();
-            }
-            mRecyclerView.setVisibility(View.GONE);
-            mFabMenu.setVisibility(View.GONE);
-        }
-    }
-
-    protected void endAsyncTask(String tag) {
-        mNumberOfWipOperations -= 1;
-        if (mNumberOfWipOperations == 0) {
-            if (mIndicatorView.isShown()) {
-                mIndicatorView.hide();
-            }
-            mRecyclerView.setVisibility(View.VISIBLE);
-            mFabMenu.setVisibility(View.VISIBLE);
-        }
-        Log.d(TAG, String.format("(%d)%s::endAsyncTask => %s", mNumberOfWipOperations, getClass().getName(),tag));
-    }
-
-    @SuppressWarnings("unused")
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventRefresh(RefreshEvent ev) {
-        triggerLoadPackageInfoListInternal();
-    }
-
-    // TODO find a better way to refresh data
-    protected void triggerLoadPackageInfoList() {
-        EventBus.getDefault().post(new RefreshEvent());
-    }
-
-    private void triggerLoadPackageInfoListInternal() {
-        beginAsyncTask("triggerLoadPackageInfoListInternal");
-        mDisposables.add(onCreatePackageInfoListObservable()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(new DisposableObserver<List<PackageInfo>>() {
-
-                    @Override
-                    public void onNext(List<PackageInfo> packageInfoList) {
-                        onPackageInfoListLoaded(packageInfoList);
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        Log.e(TAG, "triggerLoadPackageInfoListInternal=>onError", e);
-                        endAsyncTask("triggerLoadPackageInfoListInternal");
-                    }
-
-                    @Override
-                    public void onComplete() {
-                        endAsyncTask("triggerLoadPackageInfoListInternal");
-                    }
-                })
-        );
-    }
-
     private void setupFabMenu() {
         onCreateFabOptionsMenu();
         mFabMenu.findViewById(R.id.fab_menu_edit).setOnClickListener(this);
-        mFabMenu.findViewById(R.id.fab_menu_refresh).setOnClickListener(this);
     }
 
     private void setupRecyclerView() {
@@ -326,35 +251,70 @@ public abstract class AbstractAppListFragment extends Fragment
         }));
 
         //noinspection ConstantConditions
-        mRecyclerViewAdapter = new PackageInfoAdapter(new ArrayList<PackageInfo>(0), getActivity().getPackageManager());
+        mRecyclerViewAdapter = new AppInfoAdapter(new ArrayList<AppInfo>(0), getActivity().getPackageManager());
         mRecyclerView.setAdapter(mRecyclerViewAdapter);
+        getDatabase().getAppInfoDao().listAllApps().observe(this, new Observer<List<AppInfo>>() {
+            @Override
+            public void onChanged(@Nullable List<AppInfo> appInfos) {
+                mDataLoaded = true;
+                mIndicatorView.hide();
+                List<AppInfo> results = new ArrayList<>();
+                if (appInfos != null) {
+                    for (AppInfo info: appInfos) {
+                        if (filterAppInfo(info)) {
+                            results.add(info);
+                        }
+                    }
+                }
+                mRecyclerViewAdapter.resetDataSet(results);
+                mRecyclerView.setVisibility(View.VISIBLE);
+                mFabMenu.setVisibility(View.VISIBLE);
+            }
+        });
 
     }
 
+    protected abstract boolean filterAppInfo(AppInfo info);
+
     private void onPackageItemClick(int position) {
-        PackageInfo packageInfo = mRecyclerViewAdapter.getItemData(position);
-        if (!packageInfo.applicationInfo.enabled) {
-            if (Shell.SU.available()) {
-                Shell.run("su", new String[] {"pm enable " + packageInfo.packageName}, null, true);
-            }
-            //noinspection ConstantConditions
-            Intent launchIntent = getActivity().getPackageManager().getLaunchIntentForPackage(packageInfo.packageName);
-            if (launchIntent != null) {
-                startActivity(launchIntent);
-                return;
-            }
+        final AppInfo info = mRecyclerViewAdapter.getItemData(position);
+        //  TODO
+        mDisposables.add(RxUtils.enableApp(info.getName(), getDatabase())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableObserver<Void>() {
+
+                    @Override
+                    public void onNext(Void aVoid) {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        startOrViewApp(info.getName());
+                    }
+                })
+        );
+    }
+
+    private void startOrViewApp(String packageName) {
+        //noinspection ConstantConditions
+        Intent launchIntent = getActivity().getPackageManager().getLaunchIntentForPackage(packageName);
+        if (launchIntent != null) {
+            startActivity(launchIntent);
+            return;
         }
         // https://stackoverflow.com/questions/31127116/open-app-permission-settings
-        Intent detailIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + packageInfo.packageName));
+        Intent detailIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + packageName));
         detailIntent.addCategory(Intent.CATEGORY_DEFAULT);
         detailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(detailIntent);
-
     }
 
-    private void onPackageInfoListLoaded(List<PackageInfo> packageInfoList) {
-        mRecyclerViewAdapter.resetDataSet(packageInfoList);
-    }
 
     private boolean actionModeIsPresent() {
         Activity activity = getActivity();
@@ -363,9 +323,6 @@ public abstract class AbstractAppListFragment extends Fragment
         }
         ActionModeSupport actionModeSupport = (ActionModeSupport) activity;
         return actionModeSupport.getSupportActionMode() != null;
-    }
-
-    private static class RefreshEvent {
     }
 
 }

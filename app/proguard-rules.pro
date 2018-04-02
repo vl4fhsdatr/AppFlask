@@ -24,7 +24,7 @@
 -keep class com.wang.avi.indicators.** { *; }
 
 # reflection Fragment creation
--keepclasseswithmembers class ** {
+-keepclasseswithmembers class **Fragment {
     *** newInstance();
 }
 
@@ -46,14 +46,10 @@
     rx.internal.util.atomic.LinkedQueueNode consumerNode;
 }
 
-#EventBus
--keepattributes *Annotation*
--keepclassmembers class ** {
-    @org.greenrobot.eventbus.Subscribe <methods>;
-}
--keep enum org.greenrobot.eventbus.ThreadMode { *; }
-
 # support libraries
 -dontwarn android.support.v7.**
 -keep class android.support.v7.** { *; }
 -keep interface android.support.v7.** { *; }
+
+# dagger2
+-dontwarn com.google.errorprone.annotations.**

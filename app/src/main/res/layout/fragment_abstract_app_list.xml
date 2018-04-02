@@ -46,18 +46,6 @@
             app:fab_label="edit"
             />
 
-        <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/fab_menu_refresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_menu_refresh"
-            app:fab_colorNormal="@color/colorFabNormal"
-            app:fab_colorDisabled="@color/colorFabDisabled"
-            app:fab_colorPressed="@color/colorFabPressed"
-            app:fab_colorRipple="@color/colorFabRipple"
-            app:fab_label="refresh"
-            />
-
     </com.github.clans.fab.FloatingActionMenu>
 
 </RelativeLayout>

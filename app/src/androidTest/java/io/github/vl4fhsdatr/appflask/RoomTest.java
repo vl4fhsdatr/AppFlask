@@ -10,8 +10,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.github.vl4fhsdatr.appflask.database.AppDatabase;
-import io.github.vl4fhsdatr.appflask.database.appinfo.AppInfo;
+import io.github.vl4fhsdatr.appflask.persistence.AppDatabase;
+import io.github.vl4fhsdatr.appflask.core.AppInfo;
 
 import static org.junit.Assert.assertEquals;
 
@@ -42,10 +42,10 @@ public class RoomTest {
         final String testAppName = "app_name_test";
 
         AppInfo appInfo1 = new AppInfo();
-        appInfo1.setAppName(testAppName);
+        appInfo1.setName(testAppName);
         mDatabase.getAppInfoDao().insert(appInfo1);
         AppInfo appInfo2 = new AppInfo();
-        appInfo2.setAppName(testAppName);
+        appInfo2.setName(testAppName);
         mDatabase.getAppInfoDao().insert(appInfo2);
         assertEquals(1, mDatabase.getAppInfoDao().list().size());
 
